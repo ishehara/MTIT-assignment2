@@ -2,3 +2,9 @@ fastapi
 uvicorn
 httpx
 pydantic
+python-dotenv
+python-jose
+python-multipart
+pymongo
+sqlalchemy
+psycopg2-binary
