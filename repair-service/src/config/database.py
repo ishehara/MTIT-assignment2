@@ -1,22 +1,16 @@
-import os
-
-from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
-load_dotenv()
-
-MONGODB_URI = os.getenv("MONGODB_URI", "")
-MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "computer_repair_management")
+from src.config.settings import settings
 
 _client = None
 
 
 def _get_client():
     global _client
-    if _client is None and MONGODB_URI:
+    if _client is None and settings.MONGODB_URI:
         try:
-            _client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
+            _client = MongoClient(settings.MONGODB_URI, serverSelectionTimeoutMS=5000)
         except Exception:
             _client = None
     return _client
@@ -26,7 +20,14 @@ def get_database():
     client = _get_client()
     if not client:
         return None
-    return client[MONGODB_DB_NAME]
+    return client[settings.MONGODB_DB_NAME]
+
+
+def get_repairs_collection():
+    db = get_database()
+    if db is None:
+        return None
+    return db[settings.REPAIRS_COLLECTION]
 
 
 def check_mongo_connection() -> bool:
