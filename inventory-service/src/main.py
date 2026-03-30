@@ -21,7 +21,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(
     title="Inventory Management Service",
     version=settings.APP_VERSION,
-    description="Inventory microservice for university microservices architecture",
+    description="Inventory microservice for Computer Repair Management System",
     lifespan=lifespan,
 )
 

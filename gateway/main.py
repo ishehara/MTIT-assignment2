@@ -21,7 +21,7 @@ from db.mongo import check_mongo_connection  # noqa: E402
 app = FastAPI(
     title="API Gateway",
     version="2.0.0",
-    description="Gateway with inventory routes and shared MongoDB status check",
+    description="API Gateway for microservices system: routes for inventory, customers, repairs, and staff, with shared MongoDB health check.",
 )
 
 app.add_middleware(LoggingMiddleware)
