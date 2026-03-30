@@ -362,7 +362,9 @@ async def create_customer(payload: CustomerCreate):
 @app.put("/gateway/customers/{customer_id}", tags=["Customers"])
 async def update_customer(customer_id: int, payload: CustomerUpdate):
     return await forward_customer_request(
-        f"/api/customers/{customer_id}",
+        f"/api/customers/{customer_id}", "PUT", json=payload.model_dump(exclude_unset=True),
+    )
+
 # ---------------------------------------------------------------------------
 # Repair service routes
 # ---------------------------------------------------------------------------
