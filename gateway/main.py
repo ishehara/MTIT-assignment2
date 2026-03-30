@@ -30,6 +30,7 @@ app.add_exception_handler(Exception, general_exception_handler)
 
 INVENTORY_SERVICE_URL = settings.INVENTORY_SERVICE_URL
 REPAIR_SERVICE_URL = settings.REPAIR_SERVICE_URL
+STAFF_SERVICE_URL = settings.STAFF_SERVICE_URL
 
 
 # ---------------------------------------------------------------------------
@@ -136,6 +137,27 @@ class InventoryUpdate(BaseModel):
     price: Optional[float] = Field(None, ge=0)
 
 
+# ---------------------------------------------------------------------------
+# Staff models
+# ---------------------------------------------------------------------------
+
+class StaffCreate(BaseModel):
+    name: str = Field(..., min_length=2)
+    email: Optional[str] = None
+    phone: str = Field(..., min_length=7)
+    specialty: str
+    status: Optional[str] = "active"
+
+
+class StaffUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=2)
+    email: Optional[str] = None
+    phone: Optional[str] = Field(None, min_length=7)
+    specialty: Optional[str] = None
+    workload: Optional[int] = None
+    status: Optional[str] = None
+
+
 async def forward_inventory_request(path: str, method: str, **kwargs) -> Any:
     url = f"{INVENTORY_SERVICE_URL}{path}"
 
@@ -187,12 +209,67 @@ async def forward_inventory_request(path: str, method: str, **kwargs) -> Any:
             ) from exc
 
 
+# ---------------------------------------------------------------------------
+# Staff service helpers
+# ---------------------------------------------------------------------------
+
+async def forward_staff_request(path: str, method: str, **kwargs) -> Any:
+    url = f"{STAFF_SERVICE_URL}{path}"
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            if method == "GET":
+                response = await client.get(url, **kwargs)
+            elif method == "POST":
+                response = await client.post(url, **kwargs)
+            elif method == "PUT":
+                response = await client.put(url, **kwargs)
+            elif method == "DELETE":
+                response = await client.delete(url, **kwargs)
+            else:
+                raise ServiceError(
+                    message=f"HTTP method '{method}' not allowed",
+                    status_code=405,
+                    service_name="staff",
+                )
+
+            if response.status_code >= 500:
+                raise ServiceError(
+                    message=f"staff service error: {response.text}",
+                    status_code=response.status_code,
+                    service_name="staff",
+                )
+
+            return JSONResponse(
+                content=response.json() if response.text else None,
+                status_code=response.status_code,
+            )
+        except httpx.TimeoutException as exc:
+            raise ServiceError(
+                message="staff service timeout - request took too long",
+                status_code=504,
+                service_name="staff",
+            ) from exc
+        except httpx.ConnectError as exc:
+            raise ServiceError(
+                message="staff service unavailable - cannot connect to service",
+                status_code=503,
+                service_name="staff",
+            ) from exc
+        except httpx.RequestError as exc:
+            raise ServiceError(
+                message=f"staff service error: {str(exc)}",
+                status_code=503,
+                service_name="staff",
+            ) from exc
+
+
 @app.get("/")
 def read_root():
     return {
         "message": "API Gateway is running",
         "version": "2.0.0",
-        "available_services": ["inventory", "repair"],
+        "available_services": ["inventory", "repair", "staff"],
         "database": {
             "provider": "MongoDB",
             "status": "UP" if check_mongo_connection() else "DOWN",
@@ -274,3 +351,36 @@ async def update_repair_status(job_id: str, payload: RepairStatusUpdate):
 @app.delete("/gateway/repairs/{job_id}", tags=["Repair"])
 async def delete_repair_job(job_id: str):
     return await forward_repair_request(f"/api/repairs/{job_id}", "DELETE")
+
+
+# ---------------------------------------------------------------------------
+# Staff service routes
+# ---------------------------------------------------------------------------
+
+@app.post("/gateway/staff", tags=["Staff"])
+async def create_staff(staff: StaffCreate):
+    return await forward_staff_request("/api/staff", "POST", json=staff.model_dump())
+
+
+@app.get("/gateway/staff", tags=["Staff"])
+async def get_all_staff():
+    return await forward_staff_request("/api/staff", "GET")
+
+
+@app.get("/gateway/staff/{staff_id}", tags=["Staff"])
+async def get_staff(staff_id: str):
+    return await forward_staff_request(f"/api/staff/{staff_id}", "GET")
+
+
+@app.put("/gateway/staff/{staff_id}", tags=["Staff"])
+async def update_staff(staff_id: str, staff: StaffUpdate):
+    return await forward_staff_request(
+        f"/api/staff/{staff_id}",
+        "PUT",
+        json=staff.model_dump(exclude_unset=True),
+    )
+
+
+@app.delete("/gateway/staff/{staff_id}", tags=["Staff"])
+async def delete_staff(staff_id: str):
+    return await forward_staff_request(f"/api/staff/{staff_id}", "DELETE")
