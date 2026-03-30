@@ -11,7 +11,6 @@ app = FastAPI(
     description="Microservice for managing device repair jobs — registration, status tracking, and handover.",
 )
 
-app.include_router(repair_router)
 app.include_router(repair_router, prefix="/api")
 
 
