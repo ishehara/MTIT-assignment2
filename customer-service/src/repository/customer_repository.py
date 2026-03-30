@@ -17,10 +17,7 @@ class CustomerRepository:
             "phone": document["phone"],
             "email": document["email"],
             "address": document["address"],
-            "device_type": document["deviceType"],
-            "device_issue": document["deviceIssue"],
-            "device_status": document["deviceStatus"],
-            "repair_history": document.get("repairHistory", []),
+            "customer_nic": document.get("customerNic", ""),
             "createdAt": document["createdAt"],
             "updatedAt": document["updatedAt"],
         }
@@ -29,11 +26,7 @@ class CustomerRepository:
     def _prepare_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
         data = payload.copy()
         data["customerId"] = data.pop("customer_id")
-        data["deviceType"] = data.pop("device_type")
-        data["deviceIssue"] = data.pop("device_issue")
-        data["deviceStatus"] = data.pop("device_status")
-        data["repairHistory"] = data.get("repair_history", [])
-        data.pop("repair_history", None)
+        data["customerNic"] = data.pop("customer_nic")
         return data
 
     def create(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -59,14 +52,8 @@ class CustomerRepository:
         update_data = update_payload.copy()
         if "customer_id" in update_data:
             update_data.pop("customer_id")
-        if "device_type" in update_data:
-            update_data["deviceType"] = update_data.pop("device_type")
-        if "device_issue" in update_data:
-            update_data["deviceIssue"] = update_data.pop("device_issue")
-        if "device_status" in update_data:
-            update_data["deviceStatus"] = update_data.pop("device_status")
-        if "repair_history" in update_data:
-            update_data["repairHistory"] = update_data.pop("repair_history")
+        if "customer_nic" in update_data:
+            update_data["customerNic"] = update_data.pop("customer_nic")
         update_data["updatedAt"] = datetime.now(timezone.utc)
 
         result = self.collection.update_one(
