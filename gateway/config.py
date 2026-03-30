@@ -21,6 +21,7 @@ class Settings:
     INVENTORY_SERVICE_URL = os.getenv("INVENTORY_SERVICE_URL", "http://localhost:8003")
     
     REPAIR_SERVICE_URL = os.getenv("REPAIR_SERVICE_URL", "http://localhost:8004")
+    STAFF_SERVICE_URL = os.getenv("STAFF_SERVICE_URL", "http://localhost:8005")
 
 
 settings = Settings()
