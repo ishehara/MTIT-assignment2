@@ -363,6 +363,9 @@ async def create_customer(payload: CustomerCreate):
 async def update_customer(customer_id: int, payload: CustomerUpdate):
     return await forward_customer_request(
         f"/api/customers/{customer_id}",
+        "PUT",
+        json=payload.model_dump()
+    )
 # ---------------------------------------------------------------------------
 # Repair service routes
 # ---------------------------------------------------------------------------
