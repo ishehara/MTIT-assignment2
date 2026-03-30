@@ -25,7 +25,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.include_router(inventory_router)
+
 app.include_router(inventory_router, prefix="/api")
 
 

@@ -13,13 +13,24 @@ MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "computer_repair_management")
 CUSTOMER_COLLECTION = os.getenv("CUSTOMER_COLLECTION", "customers")
 INVENTORY_COLLECTION = os.getenv("INVENTORY_COLLECTION", "inventory_items")
 
-_client = MongoClient(MONGODB_URI) if MONGODB_URI else None
+_client = None
+
+
+def _get_client():
+    global _client
+    if _client is None and MONGODB_URI:
+        try:
+            _client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
+        except Exception:
+            _client = None
+    return _client
 
 
 def get_database():
-    if not _client:
+    client = _get_client()
+    if not client:
         return None
-    return _client[MONGODB_DB_NAME]
+    return client[MONGODB_DB_NAME]
 
 
 def get_collection(name: str) -> Optional[Collection]:
@@ -30,10 +41,11 @@ def get_collection(name: str) -> Optional[Collection]:
 
 
 def check_mongo_connection() -> bool:
-    if not _client:
+    client = _get_client()
+    if not client:
         return False
     try:
-        _client.admin.command("ping")
+        client.admin.command("ping")
         return True
     except PyMongoError:
         return False
