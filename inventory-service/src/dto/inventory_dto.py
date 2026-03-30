@@ -27,3 +27,8 @@ class InventoryResponseDTO(BaseModel):
     quantity: int
     price: float
     createdAt: datetime
+
+
+class MessageResponseDTO(BaseModel):
+    message: str
+    status: str

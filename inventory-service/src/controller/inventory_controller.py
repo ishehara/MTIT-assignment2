@@ -7,6 +7,7 @@ from src.dto.inventory_dto import (
     InventoryCreateDTO,
     InventoryResponseDTO,
     InventoryUpdateDTO,
+    MessageResponseDTO,
 )
 from src.service.inventory_service import InventoryService
 
@@ -42,8 +43,8 @@ def update_item(item_id: str, payload: InventoryUpdateDTO, collection: Collectio
     return InventoryResponseDTO.model_validate(item)
 
 
-@router.delete("/inventory/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/inventory/{item_id}", response_model=MessageResponseDTO, status_code=status.HTTP_200_OK)
 def delete_item(item_id: str, collection: CollectionDep):
     service = InventoryService(collection)
     service.delete_item(item_id)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return MessageResponseDTO(message=f"Inventory item with ID {item_id} deleted successfully", status="success")
