@@ -16,7 +16,10 @@ class Settings:
     MONGODB_URI = os.getenv("MONGODB_URI", "")
     MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "ComputerRepairManagementSystem")
 
+    # Service URLs
+    CUSTOMER_SERVICE_URL = os.getenv("CUSTOMER_SERVICE_URL", "http://localhost:8002")
     INVENTORY_SERVICE_URL = os.getenv("INVENTORY_SERVICE_URL", "http://localhost:8003")
+    
     REPAIR_SERVICE_URL = os.getenv("REPAIR_SERVICE_URL", "http://localhost:8004")
 
 
