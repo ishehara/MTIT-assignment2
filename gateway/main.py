@@ -1,11 +1,11 @@
 from pathlib import Path
 import sys
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import httpx
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 from config import settings
 from errors import ServiceError, general_exception_handler, service_error_handler
@@ -29,6 +29,7 @@ app.add_exception_handler(ServiceError, service_error_handler)
 app.add_exception_handler(Exception, general_exception_handler)
 
 INVENTORY_SERVICE_URL = settings.INVENTORY_SERVICE_URL
+CUSTOMER_SERVICE_URL = settings.CUSTOMER_SERVICE_URL
 REPAIR_SERVICE_URL = settings.REPAIR_SERVICE_URL
 STAFF_SERVICE_URL = settings.STAFF_SERVICE_URL
 
@@ -160,6 +161,37 @@ class StaffUpdate(BaseModel):
 
 async def forward_inventory_request(path: str, method: str, **kwargs) -> Any:
     url = f"{INVENTORY_SERVICE_URL}{path}"
+class CustomerCreate(BaseModel):
+    customer_id: int = Field(..., ge=1)
+    name: str = Field(..., min_length=2)
+    phone: str = Field(..., min_length=7)
+    email: EmailStr
+    address: str = Field(..., min_length=5)
+    device_type: str = Field(..., min_length=2)
+    device_issue: str = Field(..., min_length=2)
+    device_status: str = Field(..., min_length=2)
+    repair_history: List[str] = Field(default_factory=list)
+
+
+class CustomerUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=2)
+    phone: Optional[str] = Field(None, min_length=7)
+    email: Optional[EmailStr] = None
+    address: Optional[str] = Field(None, min_length=5)
+    device_type: Optional[str] = Field(None, min_length=2)
+    device_issue: Optional[str] = Field(None, min_length=2)
+    device_status: Optional[str] = Field(None, min_length=2)
+    repair_history: Optional[List[str]] = None
+
+
+async def forward_service_request(
+    service_name: str,
+    base_url: str,
+    path: str,
+    method: str,
+    **kwargs,
+) -> Any:
+    url = f"{base_url}{path}"
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:
@@ -175,14 +207,14 @@ async def forward_inventory_request(path: str, method: str, **kwargs) -> Any:
                 raise ServiceError(
                     message=f"HTTP method '{method}' not allowed",
                     status_code=405,
-                    service_name="inventory",
+                    service_name=service_name,
                 )
 
             if response.status_code >= 500:
                 raise ServiceError(
-                    message=f"inventory service error: {response.text}",
+                    message=f"{service_name} service error: {response.text}",
                     status_code=response.status_code,
-                    service_name="inventory",
+                    service_name=service_name,
                 )
 
             return JSONResponse(
@@ -191,21 +223,21 @@ async def forward_inventory_request(path: str, method: str, **kwargs) -> Any:
             )
         except httpx.TimeoutException as exc:
             raise ServiceError(
-                message="inventory service timeout - request took too long",
+                message=f"{service_name} service timeout - request took too long",
                 status_code=504,
-                service_name="inventory",
+                service_name=service_name,
             ) from exc
         except httpx.ConnectError as exc:
             raise ServiceError(
-                message="inventory service unavailable - cannot connect to service",
+                message=f"{service_name} service unavailable - cannot connect to service",
                 status_code=503,
-                service_name="inventory",
+                service_name=service_name,
             ) from exc
         except httpx.RequestError as exc:
             raise ServiceError(
-                message=f"inventory service error: {str(exc)}",
+                message=f"{service_name} service error: {str(exc)}",
                 status_code=503,
-                service_name="inventory",
+                service_name=service_name,
             ) from exc
 
 
@@ -262,6 +294,12 @@ async def forward_staff_request(path: str, method: str, **kwargs) -> Any:
                 status_code=503,
                 service_name="staff",
             ) from exc
+async def forward_inventory_request(path: str, method: str, **kwargs) -> Any:
+    return await forward_service_request("inventory", INVENTORY_SERVICE_URL, path, method, **kwargs)
+
+
+async def forward_customer_request(path: str, method: str, **kwargs) -> Any:
+    return await forward_service_request("customer", CUSTOMER_SERVICE_URL, path, method, **kwargs)
 
 
 @app.get("/")
@@ -269,7 +307,7 @@ def read_root():
     return {
         "message": "API Gateway is running",
         "version": "2.0.0",
-        "available_services": ["inventory", "repair", "staff"],
+        "available_services": ["inventory", "repair", "staff", "customer"],
         "database": {
             "provider": "MongoDB",
             "status": "UP" if check_mongo_connection() else "DOWN",
@@ -306,6 +344,25 @@ async def delete_inventory_item(item_id: str):
     return await forward_inventory_request(f"/api/inventory/{item_id}", "DELETE")
 
 
+@app.get("/gateway/customers", tags=["Customers"])
+async def get_customers():
+    return await forward_customer_request("/api/customers", "GET")
+
+
+@app.get("/gateway/customers/{customer_id}", tags=["Customers"])
+async def get_customer(customer_id: int):
+    return await forward_customer_request(f"/api/customers/{customer_id}", "GET")
+
+
+@app.post("/gateway/customers", tags=["Customers"])
+async def create_customer(payload: CustomerCreate):
+    return await forward_customer_request("/api/customers", "POST", json=payload.model_dump())
+
+
+@app.put("/gateway/customers/{customer_id}", tags=["Customers"])
+async def update_customer(customer_id: int, payload: CustomerUpdate):
+    return await forward_customer_request(
+        f"/api/customers/{customer_id}",
 # ---------------------------------------------------------------------------
 # Repair service routes
 # ---------------------------------------------------------------------------
@@ -339,6 +396,10 @@ async def update_repair_job(job_id: str, payload: RepairJobUpdate):
     )
 
 
+@app.delete("/gateway/customers/{customer_id}", tags=["Customers"])
+async def delete_customer(customer_id: int):
+    return await forward_customer_request(f"/api/customers/{customer_id}", "DELETE")
+ 
 @app.patch("/gateway/repairs/{job_id}/status", tags=["Repair"])
 async def update_repair_status(job_id: str, payload: RepairStatusUpdate):
     return await forward_repair_request(
