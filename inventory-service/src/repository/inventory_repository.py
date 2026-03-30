@@ -17,6 +17,9 @@ class InventoryRepository:
             "description": document["description"],
             "quantity": document["quantity"],
             "price": document["price"],
+            "supplier": document.get("supplier", "Unknown"),
+            "condition": document.get("condition", "Unknown"),
+            "warranty_period": document.get("warranty_period", "None"),
             "createdAt": document["createdAt"],
         }
 

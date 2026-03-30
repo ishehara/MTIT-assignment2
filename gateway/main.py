@@ -129,6 +129,9 @@ class InventoryCreate(BaseModel):
     description: str = Field(..., min_length=2)
     quantity: int = Field(..., ge=0)
     price: float = Field(..., ge=0)
+    supplier: str = Field(..., min_length=2)
+    condition: str = Field(..., min_length=2)
+    warranty_period: str = Field(..., min_length=1)
 
 
 class InventoryUpdate(BaseModel):
@@ -136,6 +139,9 @@ class InventoryUpdate(BaseModel):
     description: Optional[str] = Field(None, min_length=2)
     quantity: Optional[int] = Field(None, ge=0)
     price: Optional[float] = Field(None, ge=0)
+    supplier: Optional[str] = Field(None, min_length=2)
+    condition: Optional[str] = Field(None, min_length=2)
+    warranty_period: Optional[str] = Field(None, min_length=1)
 
 
 # ---------------------------------------------------------------------------
