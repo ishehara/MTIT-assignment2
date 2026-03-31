@@ -36,6 +36,9 @@ Gateway-compatible duplicates:
 - `description`
 - `quantity`
 - `price`
+- `supplier`
+- `condition`
+- `warranty_period`
 - `createdAt`
 
 ## Run Instructions
