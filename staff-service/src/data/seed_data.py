@@ -10,8 +10,8 @@ def seed_staff_data(collection) -> None:
     try:
         repository = StaffRepository(collection)
 
-        if repository.count() > 0:
-            return
+        # Clear all existing data
+        collection.delete_many({})
 
         sample_staff = [
             {
@@ -19,21 +19,24 @@ def seed_staff_data(collection) -> None:
                 "phone": "0711234567",
                 "email": "ashan@repairshop.lk",
                 "specialty": "MacBook Expert",
-                "status": "active",
+                "experience_years": 5,
+                "availability": "available",
             },
             {
                 "name": "Nimasha Silva",
                 "phone": "0729876543",
                 "email": "nimasha@repairshop.lk",
                 "specialty": "Screen Repair",
-                "status": "active",
+                "experience_years": 3,
+                "availability": "available",
             },
             {
                 "name": "Kasun Fernando",
                 "phone": "0765554433",
                 "email": "kasun@repairshop.lk",
                 "specialty": "Water Damage Recovery",
-                "status": "active",
+                "experience_years": 7,
+                "availability": "available",
             },
         ]
 

@@ -9,7 +9,8 @@ class StaffCreateRequest(BaseModel):
     email: Optional[str] = None
     phone: str = Field(..., min_length=7)
     specialty: str
-    status: Optional[Literal["active", "inactive"]] = "active"
+    experience_years: int = Field(..., ge=0)
+    availability: Optional[Literal["available", "unavailable"]] = "available"
 
     model_config = {"populate_by_name": True}
 
@@ -19,8 +20,9 @@ class StaffUpdateRequest(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = Field(None, min_length=7)
     specialty: Optional[str] = None
+    experience_years: Optional[int] = Field(None, ge=0)
     workload: Optional[int] = None
-    status: Optional[Literal["active", "inactive"]] = None
+    availability: Optional[Literal["available", "unavailable"]] = None
 
     model_config = {"populate_by_name": True}
 
@@ -31,8 +33,9 @@ class StaffResponse(BaseModel):
     email: Optional[str] = None
     phone: str
     specialty: str
+    experience_years: int
     workload: int
-    status: str
+    availability: str
     created_at: datetime
 
     model_config = {"populate_by_name": True}
