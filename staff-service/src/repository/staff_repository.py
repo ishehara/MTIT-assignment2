@@ -17,8 +17,9 @@ class StaffRepository:
             "email": document.get("email"),
             "phone": document["phone"],
             "specialty": document["specialty"],
+            "experience_years": document.get("experience_years", 0),
             "workload": document["workload"],
-            "status": document["status"],
+            "availability": document.get("availability", "available"),
             "created_at": document["created_at"],
         }
 

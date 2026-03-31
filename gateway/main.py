@@ -153,7 +153,8 @@ class StaffCreate(BaseModel):
     email: Optional[str] = None
     phone: str = Field(..., min_length=7)
     specialty: str
-    status: Optional[str] = "active"
+    experience_years: int = Field(..., ge=0)
+    availability: Optional[str] = "available"
 
 
 class StaffUpdate(BaseModel):
@@ -161,8 +162,9 @@ class StaffUpdate(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = Field(None, min_length=7)
     specialty: Optional[str] = None
+    experience_years: Optional[int] = Field(None, ge=0)
     workload: Optional[int] = None
-    status: Optional[str] = None
+    availability: Optional[str] = None
 
 
 async def forward_inventory_request(path: str, method: str, **kwargs) -> Any:
