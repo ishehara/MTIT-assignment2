@@ -173,10 +173,7 @@ class CustomerCreate(BaseModel):
     phone: str = Field(..., min_length=7)
     email: EmailStr
     address: str = Field(..., min_length=5)
-    device_type: str = Field(..., min_length=2)
-    device_issue: str = Field(..., min_length=2)
-    device_status: str = Field(..., min_length=2)
-    repair_history: List[str] = Field(default_factory=list)
+    customer_nic: str = Field(..., min_length=5, max_length=20)
 
 
 class CustomerUpdate(BaseModel):
@@ -184,10 +181,7 @@ class CustomerUpdate(BaseModel):
     phone: Optional[str] = Field(None, min_length=7)
     email: Optional[EmailStr] = None
     address: Optional[str] = Field(None, min_length=5)
-    device_type: Optional[str] = Field(None, min_length=2)
-    device_issue: Optional[str] = Field(None, min_length=2)
-    device_status: Optional[str] = Field(None, min_length=2)
-    repair_history: Optional[List[str]] = None
+    customer_nic: Optional[str] = Field(None, min_length=5, max_length=20)
 
 
 async def forward_service_request(
