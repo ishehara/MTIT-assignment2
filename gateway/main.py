@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 
 import httpx
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr, Field
 
@@ -22,6 +23,20 @@ app = FastAPI(
     title="API Gateway",
     version="2.0.0",
     description="API Gateway for microservices system: routes for inventory, customers, repairs, and staff, with shared MongoDB health check.",
+)
+
+# Configure CORS to allow frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.add_middleware(LoggingMiddleware)
